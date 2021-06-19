@@ -2,20 +2,8 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-
-const handlebars = require('express-handlebars');
 const productos = require('./api/productos');
-
-// establecemos la configuración de handlebars
-app.engine(
-    "hbs",
-    handlebars({
-        extname: ".hbs",
-        defaultLayout: 'index.hbs',
-    })
-);
-app.set("view engine", "hbs");
-app.set("views", "./views");
+const archivos = require('./api/archivos');
 
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
@@ -51,23 +39,29 @@ router.delete('/productos/borrar/:id', (req, res) => {
     res.json(productos.borrar(id));
 });
 
-router.get('/productos/vista', (req, res) => {
-    res.render('vista', { productos: productos.listar(), hayProductos: productos.listar().length });
-});
-
 app.use('/api', router);
 
 /* -------------------- Web Sockets ---------------------- */
+const mensajes = [
+    { email: '', msj: '', fyh: '' },
+];
+
 io.on('connection', socket => {
     console.log('Welcome!');
 
+    /* Socket para tabla de productos */
     socket.emit('productos', productos.listar());
-
-    /* Escucho los mensajes enviado por el cliente y se los propago a todos */
     socket.on('update', data => {
         io.sockets.emit('productos', productos.listar());
     });
 
+    /* Socket para chat */
+    socket.emit('mensajes', mensajes);
+    socket.on('nuevo mensaje', msj=>{
+        mensajes.push(msj)
+        archivos.guardar(msj,'./mensajes.txt');
+        io.sockets.emit('mensajes', mensajes)
+    })
 });
 /* ------------------------------------------------------- */
 

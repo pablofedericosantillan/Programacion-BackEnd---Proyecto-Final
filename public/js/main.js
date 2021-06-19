@@ -5,6 +5,36 @@ socket.on('productos', function (productos) {
     document.getElementById('datos').innerHTML = data2TableHBS(productos);
 });
 
+socket.on('mensajes', data =>{ 
+    render(data);
+});
+
+function render(data){
+    let html=data.map(function(elem) {
+        return (`
+                <div class="form-group">
+                <strong style="color:blue;">${elem.email} </strong>
+                <em style="color:brown;">${elem.fyh} </em>
+                <em style="color:green;">${elem.msj} </em>
+                </div>
+                `)
+    }).join(" ");
+    document.getElementById('mensajes').innerHTML=html;
+}
+
+
+function addMessage(event){
+    let msj={
+        email: document.getElementById('email').value,
+        msj: document.getElementById('msj').value,
+        fyh: `${moment().format("DD/MM/YYYY HH:mm:ss")}`
+    };
+    socket.emit('nuevo mensaje', msj)
+    return false;
+}
+
+
+
 /* obtengo el formulario */
 const form = document.querySelector('form');
 
