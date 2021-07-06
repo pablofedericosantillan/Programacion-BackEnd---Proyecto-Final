@@ -1,89 +1,80 @@
 const moment = require('moment');
 const archivos = require('../persistencia/archivos');
-
+const rutaProductos = './src/persistencia/productos.txt';
 
 class Productos {
     constructor() {
         this.item = [];
-        this.administrador = '';
     }
 
     async listar() {
-        return archivos.leer('./src/persistencia/productos.txt');
+        try{
+            return archivos.leer(rutaProductos);
+
+        }catch(err){
+            console.log('Error en la funcion listar', err); 
+        }
     }
 
     async buscarPorId(id){
-        let producto = await archivos.leer('./src/persistencia/productos.txt');
-        let index = producto.find(p => p.id == id);
-        return index || { error: `producto con id ${id} no encontrado`};
+        try{
+            let producto = await archivos.leer(rutaProductos);
+            let index = producto.find(p => p.id == id);
+            return index || { error: `producto con id ${id} no encontrado`};
+        }catch(err){
+            console.log('Error en la funcion buscarPorId', err); 
+        }
     }
 
-    async agregar(newProduct,admin){
-        if(admin === true){
-            try{
-                let producto = await archivos.leer('./src/persistencia/productos.txt');
+    async agregar(newProduct){
+        try{
+            let producto = await archivos.leer(rutaProductos);
+                if(producto.length == 0){
+                newProduct.id=1;
+                }else{
+                newProduct.id=producto[producto.length-1].id+1;
+                }
+            newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`
+            producto.push(newProduct);
+            await archivos.guardar(producto,rutaProductos);
+            return newProduct;
+        }catch(err){
+            console.log('Error en la funcion agregar', err); 
+        }
+    }
 
-                newProduct.id = producto.length + 1;
+    async actualizar(id,newProduct){
+        try{
+            let producto = await archivos.leer(rutaProductos);
+            if(id <= producto.length){
+                newProduct.id = Number(id);
                 newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`
-                producto.push(newProduct);
-
-                await archivos.guardar(producto,'./src/persistencia/productos.txt');
-
-                return producto;
-
-           }catch(err){
-                console.log('Hubo un error en la funcion agregar'); 
-           }
-        }else {
-            return { error : -1, descripcion: "ruta 'api/productos/agregar' método 'agregar' no autorizado"};
-        }
-
-    }
-
-    async actualizar(id,newProduct,admin){
-        if(admin === true){
-            try{
-                let producto = await archivos.leer('./src/persistencia/productos.txt');
-                if(id <= producto.length){
-                    newProduct.id = Number(id);
-                    newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`
-                    let index = producto.findIndex(p => p.id == id);
-                    producto.splice(index, 1, newProduct);
-                    await archivos.guardar(producto,'./src/persistencia/productos.txt');
-                    return producto;
-                }else{
-                    return {error: "producto no encontrado para Actualizar" }
-                }
-
-
-
-            }catch(err){
-                console.log('Hubo un error en la funcion actualizar'); 
+                let index = producto.findIndex(p => p.id == id);
+                producto.splice(index, 1, newProduct);
+                await archivos.guardar(producto,rutaProductos);
+                return newProduct;
+            }else{
+                return {error: "producto no encontrado para Actualizar" }
             }
-        }else {
-        return { error : -1, descripcion: "ruta 'api/productos/guardar' método 'guardar' no autorizado"};
+        }catch(err){
+            console.log('Error en la funcion actualizar', err); 
         }
     }
     
-    async borrar(id,admin){
-        if(admin === true){            
-            try{
-                let producto = await archivos.leer('./src/persistencia/productos.txt');
-                if(id <= producto.length){
-                    let index = producto.findIndex(p => p.id == id);
-                    producto.splice(index, 1);
-                    await archivos.guardar(producto,'./src/persistencia/productos.txt');
-                    return producto;
-                }else{
-                return {error: "producto no encontrado para Borrar" }
-                }
-    
-               }catch(err){
-                console.log('Hubo un error en la funcion borrar'); 
-               }
-        }else {
-                return { error : -1, descripcion: "ruta 'api/productos/guardar' método 'guardar' no autorizado"};
-        }               
+    async borrar(id){        
+        try{
+            let producto = await archivos.leer(rutaProductos);
+            if(id <= producto.length){
+                let index = producto.findIndex(p => p.id == id);
+                producto.splice(index, 1);
+                await archivos.guardar(producto,rutaProductos);
+                return 'Proceso de borrado exitoso!';
+            }else{
+            return {error: "producto no encontrado para Borrar" }
+            }
+        }catch(err){
+            console.log('Error en la funcion borrar', err); 
+        }             
     }
 }
 

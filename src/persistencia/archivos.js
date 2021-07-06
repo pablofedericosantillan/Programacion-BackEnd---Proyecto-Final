@@ -9,7 +9,7 @@ class Archivos{
             let item = await fs.promises.readFile(ruta, 'utf-8')
             return await JSON.parse(item);
         }
-        catch(error) { 
+        catch(err) { 
             return [];
         }
     }
@@ -19,7 +19,7 @@ class Archivos{
             await fs.promises.writeFile(ruta, JSON.stringify(newProduct,null,'\t'))
             return newProduct;
            }catch(err){
-            console.log('Hubo un error en la funcion guardar en Archivos'); 
+            console.log('Error en la funcion guardar en Archivos',err); 
            }
     }
 }
