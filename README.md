@@ -23,6 +23,7 @@
  -npm start
 
 Para el "carrito" se utilizaron dos estructuras diferentes para el guardado segun la base de datos elegida:
+
     - Mongodb:
         {
         "_id": "",
