@@ -1,34 +1,43 @@
 const moment = require('moment');
-const archivos = require('../persistencia/archivos');
-const rutaCarrito= './src/persistencia/carritoCompras.txt';
 
+/* -------------------- Base de Datos ---------------------- */
+const configDataBase = require('../configDataBase.json');
+const factoryCarrito = require('../persistencia/factory');
+let instanciaCarrito = factoryCarrito.getPersistencia(`${configDataBase.DATA_BASE_CARRITO}`);
+/* --------------------------------------------------------- */
 
 class Carrito{
-    constructor(id,timestamp,carrito){
-        this.id=id;
-        this.timestamp=timestamp;
-        this.producto=carrito;
+    constructor(timestamp_Carrito,producto){
+        this.timestamp_Carrito=timestamp_Carrito;
+        this.producto=producto;
     }
 }
 
 class carritoCompras {
     constructor() {
-        this.carro = [];//array de objetos
+
     }
 
     async listar() {
         try{
-            return archivos.leer(rutaCarrito);
+            return await instanciaCarrito.listar();
+
         }catch(err){
-            console.log('Error en la funcion listar', err); 
+            console.log('Error en listar Carrito', err); 
         }
+
     }
 
     async buscarPorId(id) {
         try{
-            let carritoCompras = await archivos.leer(rutaCarrito);
-            let index = carritoCompras.find(p => p.id == id);
-            return index || { error: `producto con id ${id} no encontrado`};
+            let p = await instanciaCarrito.listar();
+            let index = p.findIndex(x => x.id == id);
+            if(index != -1){
+                return await instanciaCarrito.buscarPorId(id) 
+            }else{
+                return { error: `producto con id ${id} no encontrado`};
+            }
+
         }catch(err){
             console.log('Error en la funcion buscarPorId', err); 
         }
@@ -36,45 +45,35 @@ class carritoCompras {
     }
 
     async agregar(newProduct){
-        //if(newProduct.error!=undefined || newProduct.error!=null){
         if(newProduct.error){    
             return { error: `producto no encontrado`};
         }else{
         try{
-            let carritoCompras = await archivos.leer(rutaCarrito);
-            let id;
-            if(carritoCompras == 0){
-                id=1;
-                }else{
-                id=carritoCompras[carritoCompras.length-1].id+1;
-                }
-            let carrito=new Carrito(id, moment().format("DD/MM/YYYY HH:mm:ss"), newProduct );
-            carritoCompras.push(carrito);
-            await archivos.guardar(carritoCompras,rutaCarrito);
-            return carrito;
+            let carrito=new Carrito(moment().format("DD/MM/YYYY HH:mm:ss"), newProduct[0] );
+            return await instanciaCarrito.agregar(carrito);
         }catch(err){
             console.log('Error en la funcion agregar', err); 
         }
 
     }
     }
-  
-    async borrar(id){
-        try{
-            let carritoCompras = await archivos.leer(rutaCarrito);
-            if(id <= carritoCompras.length){
-                let index = carritoCompras.findIndex(p => p.id == id);
-                carritoCompras.splice(index, 1);
-                await archivos.guardar(carritoCompras,rutaCarrito);
-                return 'Proceso de borrado exitoso!';
-            }else{
-            return {error: "producto no encontrado para Borrar" }
-            }
 
-        }catch(err){
-            console.log('Error en la funcion borrar', err); 
-            }
+    async borrar(id){
+            try{
+                let p = await instanciaCarrito.listar();
+                let index = p.findIndex(x => x.id == id);
+                if(index != -1){
+                    await instanciaCarrito.borrar(id)
+                    return 'Proceso de borrado exitoso!';
+                }else{
+                    return {error: "producto no encontrado para Borrar" }
+                }
+            }catch(err){
+                console.log('Error en la funcion borrar', err); 
+            }   
         }
+
+        
 }
 
 

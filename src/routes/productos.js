@@ -27,7 +27,7 @@ router.delete('/productos/borrar/:id', administrador , async (req, res) => {
 
 
 function administrador (req,res,next) {
-    if(req.body.administrador !== true){
+    if(req.body.administrador == true){
         res.status(401).send({error:-1, descripcion:`ruta ${req.originalUrl} metodo ${req.method} no autorizada `})
     }else{
         next();
