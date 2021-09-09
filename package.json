@@ -14,7 +14,10 @@
     "express": "^4.17.1",
     "express-handlebars": "^5.3.2",
     "handlebars": "^4.7.7",
+    "knex": "^0.95.6",
     "moment": "^2.29.1",
+    "mongoose": "^5.12.12",
+    "mysql": "^2.18.1",
     "socket.io": "^4.1.2"
   }
 }

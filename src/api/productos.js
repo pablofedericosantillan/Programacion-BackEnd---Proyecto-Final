@@ -1,15 +1,19 @@
 const moment = require('moment');
-const archivos = require('../persistencia/archivos');
-const rutaProductos = './src/persistencia/productos.txt';
+/* -------------------- Base de Datos ---------------------- */
+const configDataBase = require('../configDataBase.json');
+const factory = require('../persistencia/factory');
+let instancia = factory.getPersistencia(`${configDataBase.DATA_BASE}`);
+/* --------------------------------------------------------- */
+
 
 class Productos {
     constructor() {
-        this.item = [];
+
     }
 
     async listar() {
         try{
-            return archivos.leer(rutaProductos);
+            return await instancia.listar();
 
         }catch(err){
             console.log('Error en la funcion listar', err); 
@@ -18,9 +22,14 @@ class Productos {
 
     async buscarPorId(id){
         try{
-            let producto = await archivos.leer(rutaProductos);
-            let index = producto.find(p => p.id == id);
-            return index || { error: `producto con id ${id} no encontrado`};
+            let p = await instancia.listar();
+            let index = p.findIndex(x => x.id == id);
+            if(index != -1){
+                return await instancia.buscarPorId(id) 
+            }else{
+                return { error: `producto con id ${id} no encontrado`};
+            }
+
         }catch(err){
             console.log('Error en la funcion buscarPorId', err); 
         }
@@ -28,16 +37,8 @@ class Productos {
 
     async agregar(newProduct){
         try{
-            let producto = await archivos.leer(rutaProductos);
-                if(producto.length == 0){
-                newProduct.id=1;
-                }else{
-                newProduct.id=producto[producto.length-1].id+1;
-                }
-            newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`
-            producto.push(newProduct);
-            await archivos.guardar(producto,rutaProductos);
-            return newProduct;
+            newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`;
+            return await instancia.agregar(newProduct);
         }catch(err){
             console.log('Error en la funcion agregar', err); 
         }
@@ -45,14 +46,11 @@ class Productos {
 
     async actualizar(id,newProduct){
         try{
-            let producto = await archivos.leer(rutaProductos);
-            if(id <= producto.length){
-                newProduct.id = Number(id);
-                newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`
-                let index = producto.findIndex(p => p.id == id);
-                producto.splice(index, 1, newProduct);
-                await archivos.guardar(producto,rutaProductos);
-                return newProduct;
+            let p = await instancia.listar();
+            let index = p.findIndex(x => x.id == id);
+            if(index != -1){
+                newProduct.timestamp= `${moment().format("DD/MM/YYYY HH:mm:ss")}`;
+                return await instancia.actualizar(id,newProduct);
             }else{
                 return {error: "producto no encontrado para Actualizar" }
             }
@@ -63,14 +61,13 @@ class Productos {
     
     async borrar(id){        
         try{
-            let producto = await archivos.leer(rutaProductos);
-            if(id <= producto.length){
-                let index = producto.findIndex(p => p.id == id);
-                producto.splice(index, 1);
-                await archivos.guardar(producto,rutaProductos);
+            let p = await instancia.listar();
+            let index = p.findIndex(x => x.id == id);
+            if(index != -1){
+                await instancia.borrar(id)
                 return 'Proceso de borrado exitoso!';
             }else{
-            return {error: "producto no encontrado para Borrar" }
+                return {error: "producto no encontrado para Borrar" }
             }
         }catch(err){
             console.log('Error en la funcion borrar', err); 
